@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+@theme {
+  /* Brand: a calm, trustworthy navy-blue. */
+  --color-brand-50: #eff4ff;
+  --color-brand-100: #dbe6fe;
+  --color-brand-200: #bfd3fe;
+  --color-brand-300: #93b4fd;
+  --color-brand-400: #608bfa;
+  --color-brand-500: #3b65f6;
+  --color-brand-600: #2547eb;
+  --color-brand-700: #1d36d8;
+  --color-brand-800: #1e2faf;
+  --color-brand-900: #1e2d8a;
+  --color-brand-950: #161d54;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-slate-50);
+  color: var(--color-slate-900);
+}
+
+/* Visible keyboard focus everywhere. */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* Form controls share one look. */
+.input {
+  @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500;
+}
+.label {
+  @apply mb-1.5 block text-sm font-medium text-slate-700;
+}
+.field-error {
+  @apply mt-1 text-xs font-medium text-red-600;
+}
+.hint {
+  @apply mt-1 text-xs text-slate-500;
+}
