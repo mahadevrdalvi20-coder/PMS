@@ -29,11 +29,13 @@ export const lookupCurrentUser = cache(async (): Promise<Lookup> => {
   if (!userId) return { status: "signed_out" };
 
   const supabase = await getSupabase();
-  let { data: me } = await supabase
+  const { data, error } = await supabase
     .from("employees")
     .select("*")
     .eq("clerk_user_id", userId)
     .maybeSingle<Employee>();
+  if (error) redirectToSetup(error);
+  let me = data;
 
   if (!me) {
     const linked = await linkClerkUser(userId);
@@ -59,6 +61,22 @@ export const lookupCurrentUser = cache(async (): Promise<Lookup> => {
   };
 });
 
+/**
+ * A Supabase error on this very first query is almost always a configuration
+ * problem (Clerk not connected to Supabase, or schema.sql not run). Send the
+ * user to /setup with a clear explanation instead of a generic 500 page.
+ */
+function redirectToSetup(error: { message: string; code?: string }): never {
+  const msg = error.message ?? "";
+  const issue = /does not exist|schema cache|42P01|PGRST205/i.test(`${msg} ${error.code}`)
+    ? "supabase-schema"
+    : /jwt|token|key|auth|PGRST30/i.test(`${msg} ${error.code}`)
+      ? "supabase-auth"
+      : "supabase-other";
+  console.error("[session] Supabase error:", error);
+  redirect(`/setup?issue=${issue}&detail=${encodeURIComponent(msg.slice(0, 200))}`);
+}
+
 async function linkClerkUser(
   userId: string,
 ): Promise<{ status: "ok"; employee: Employee } | { status: "not_registered"; email?: string } | { status: "inactive" }> {
@@ -71,12 +89,13 @@ async function linkClerkUser(
   if (emails.length === 0) return { status: "not_registered", email: primary };
 
   const admin = getAdminSupabase();
-  const { data: row } = await admin
+  const { data: row, error: lookupError } = await admin
     .from("employees")
     .select("*")
     .in("email", emails)
     .limit(1)
     .maybeSingle<Employee>();
+  if (lookupError) redirectToSetup(lookupError);
 
   if (!row) return { status: "not_registered", email: primary };
   if (!row.is_active) return { status: "inactive" };

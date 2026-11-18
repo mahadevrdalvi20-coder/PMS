@@ -88,6 +88,16 @@ Open http://localhost:3000.
 2. Add **every** variable from `.env.local` under **Settings → Environment Variables**, set `NEXT_PUBLIC_APP_URL` to your Vercel URL, and redeploy.
 3. In Clerk, add the Vercel domain to the allowed origins (development instances accept any origin).
 
+### Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Every page shows **"Setup required"** | Environment variables are missing in Vercel. Add the ones marked ✗, then **Deployments → ⋯ → Redeploy**. |
+| "Supabase rejected the signed-in user's token" | Connect Clerk to Supabase (step 3.2 above). |
+| "The database tables do not exist yet" | Run `supabase/schema.sql` in the Supabase SQL Editor. |
+| "Your account is not yet set up" after sign-in | Your e-mail is not in the `employees` table — run `seed.sql` with your e-mail, or have HR add you. |
+| Vercel build fails | Open the build log; run `npm run build` locally to reproduce. |
+
 ---
 
 ## Demo script (Definition of Done)
