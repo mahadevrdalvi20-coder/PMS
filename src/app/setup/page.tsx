@@ -1,4 +1,5 @@
 import { OPTIONAL_ENV, REQUIRED_ENV, missingEnv } from "@/lib/config";
+import { runDiagnostics } from "@/lib/diagnostics";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Setup required" };
@@ -34,13 +35,15 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
   const missing = missingEnv();
   const missingOptional = missingEnv(OPTIONAL_ENV);
   const problem = issue ? ISSUES[issue] : undefined;
-  const ok = missing.length === 0 && !problem;
+  const checks = await runDiagnostics();
+  const failed = checks.filter((c) => !c.ok);
+  const ok = missing.length === 0 && !problem && failed.length === 0;
 
   return (
     <div className="flex min-h-dvh items-start justify-center bg-slate-50 px-4 py-12">
       <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="text-xs font-semibold tracking-wider text-brand-700 uppercase">Stride PMS</div>
-        <h1 className="mt-1 text-2xl font-bold text-slate-900">{ok ? "Configuration looks good" : "Setup required"}</h1>
+        <h1 className="mt-1 text-2xl font-bold text-slate-900">{ok ? "Configuration looks good" : missing.length ? "Setup required" : "Setup check"}</h1>
 
         {missing.length > 0 && (
           <>
@@ -77,6 +80,35 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
             </ol>
           </div>
         )}
+
+        {checks.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-sm font-semibold text-slate-900">Live checks</h2>
+            <ul className="mt-2 divide-y divide-slate-100 rounded-lg border border-slate-200">
+              {checks.map((c) => (
+                <li key={c.label} className="flex items-start gap-3 px-4 py-3 text-sm">
+                  <span className={`mt-0.5 font-bold ${c.ok ? "text-emerald-600" : "text-red-600"}`}>{c.ok ? "✓" : "✗"}</span>
+                  <div>
+                    <div className="font-medium text-slate-900">{c.label}</div>
+                    {!c.ok && c.fix && <div className="mt-0.5 text-xs text-red-700">{c.fix}</div>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+          <div className="font-semibold text-slate-900">Cannot be tested automatically — check by hand</div>
+          <ul className="mt-1 list-disc space-y-1 pl-5">
+            <li>
+              Clerk is connected to Supabase: Clerk → <em>Integrations → Supabase</em> is activated, and Supabase →{" "}
+              <em>Authentication → Third-Party Auth</em> lists Clerk with the same domain. Without this, signed-in users see empty pages.
+            </li>
+            <li>After changing any Vercel environment variable you clicked <em>Redeploy</em>.</li>
+            <li>On Resend&apos;s free plan e-mails only reach the address you signed up to Resend with.</li>
+          </ul>
+        </div>
 
         {missingOptional.length > 0 && (
           <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

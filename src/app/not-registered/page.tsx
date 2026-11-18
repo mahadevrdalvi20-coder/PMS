@@ -31,6 +31,11 @@ export default async function NotRegisteredPage() {
             </>
           )}
         </p>
+        {!inactive && (
+          <p className="mt-3 text-xs text-slate-500">
+            Setting up the app yourself? Open the <a href="/setup" className="font-semibold text-brand-700">setup check</a>.
+          </p>
+        )}
         <div className="mt-6">
           <SignOutButton redirectUrl="/">
             <button className={buttonClass("secondary")}>Sign out</button>
